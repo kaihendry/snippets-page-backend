@@ -1,0 +1,15 @@
+{
+    "server": {
+        "port": 8888
+    },
+    "db": {
+        "address": "localhost",
+        "port": 27017,
+        "database": "snippets_page",
+        "user": "root",
+        "password": "qwerty"
+    },
+    "logger": {
+        "format": "123"
+    }
+}
