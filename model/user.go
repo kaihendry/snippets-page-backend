@@ -1,19 +1,18 @@
 package model
 
-//Collection name
-const Collection = "users"
+import (
+	"time"
 
-//User structure
+	"gopkg.in/mgo.v2/bson"
+)
+
+//User model
 type User struct {
-	Db           base
-	ID           string
-	PasswordHash string
-	Email        string
-}
-
-func (u *User) Exists(email string, password string) []byte {
-
-	u.Db.FindBy()
-
-	return []byte("sdfsdf")
+	ID           bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	Login        string        `json:"login" bson:"login" validate:"required"`
+	PasswordHash string        `json:"-" bson:"password_hash,omitempty"`
+	Email        string        `json:"email" bson:"email" validate:"email"`
+	Token        string        `json:"token" bson:"token,omitempty"`
+	Banned       bool          `json:"banned" bson:"banned"`
+	CreatedAt    time.Time     `json:"created_at" bson:"created_at"`
 }
