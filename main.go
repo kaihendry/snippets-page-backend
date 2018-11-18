@@ -24,15 +24,25 @@ func main() {
 
 	e.POST("v1/authentication", endpoint.Authentication)
 	e.POST("v1/users", endpoint.CreateUser)
+	e.GET("v1/snippets", func(context echo.Context) error {
+		return context.JSON(200, "all public snippets")
+	})
+	e.GET("v1/users", func(context echo.Context) error {
+		return context.JSON(200, "All users....")
+	})
+
+	e.GET("v1/users/:userId/snippets", func(context echo.Context) error {
+		return context.JSON(200, "get all snippets by user")
+	})
 
 	router := e.Group("/v1")
 	router.Use(middleware.JWT([]byte("secret")))
-	//Get metadata about the current user.
-	router.GET("/me", endpoint.CurrentUser)
-	//Get snippets for current user.
-	router.GET("/me/snippets", func(context echo.Context) error {
-		return context.String(200, "this is snippets.")
-	})
+	router.GET("/me", endpoint.Me)
+	router.PUT("/me", endpoint.UpdateMe)
+	//snipepts
+	router.GET("/me/snippets", endpoint.FetchSnippets)
+	router.POST("/me/snippets", endpoint.CreateSnippet)
+	router.PUT("/me/snippets/", endpoint.UpdateSnippet)
 
 	e.Start(":8888")
 }

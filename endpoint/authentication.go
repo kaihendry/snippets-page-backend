@@ -42,12 +42,5 @@ func (e *Endpoint) Authentication(context echo.Context) (err error) {
 	t, err := token.SignedString([]byte("secret"))
 	u.Token = t
 
-	return context.JSON(200, bson.M{
-		"id":         u.ID,
-		"login":      u.Login,
-		"email":      u.Email,
-		"token":      u.Token,
-		"banned":     u.Banned,
-		"created_at": u.CreatedAt,
-	})
+	return context.JSON(http.StatusOK, u)
 }

@@ -1,6 +1,7 @@
 package endpoint
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -18,10 +19,10 @@ import (
 func (e *Endpoint) CreateUser(context echo.Context) (err error) {
 	u := &model.User{ID: bson.NewObjectId(), CreatedAt: time.Now()}
 	if err = context.Bind(u); err != nil {
-		return context.JSON(http.StatusBadRequest, err.Error())
+		return err
 	}
 	if err = context.Validate(u); err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err.Error()}
+		return err
 	}
 	user := &model.User{}
 	if err = e.Db.C("users").Find(bson.M{"$or": []bson.M{bson.M{"login": u.Login}, bson.M{"email": u.Email}}}).One(user); err == nil {
@@ -36,19 +37,12 @@ func (e *Endpoint) CreateUser(context echo.Context) (err error) {
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadGateway, Message: "Something went fron..."}
 	}
-	return context.JSON(http.StatusCreated, bson.M{
-		"id":         u.ID,
-		"login":      u.Login,
-		"email":      u.Email,
-		"token":      u.Token,
-		"banned":     u.Banned,
-		"created_at": u.CreatedAt,
-	})
+	return context.JSON(http.StatusCreated, u)
 }
 
-//CurrentUser - get the authenticated user
+//Me - get the authenticated user
 //[GET] /v1/me
-func (e *Endpoint) CurrentUser(context echo.Context) (err error) {
+func (e *Endpoint) Me(context echo.Context) (err error) {
 	authUser := context.Get("user").(*jwt.Token)
 	claims := authUser.Claims.(jwt.MapClaims)
 	user := new(model.User)
@@ -56,4 +50,13 @@ func (e *Endpoint) CurrentUser(context echo.Context) (err error) {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Something went wrong..."}
 	}
 	return context.JSON(200, user)
+}
+
+//UpdateMe update current user
+func (e *Endpoint) UpdateMe(context echo.Context) error {
+
+	q := context.Get("user").(*jwt.Token)
+	fmt.Println(q)
+
+	return context.JSON(200, "hello world....")
 }

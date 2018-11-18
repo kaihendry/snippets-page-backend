@@ -15,4 +15,5 @@ type User struct {
 	Token        string        `json:"token" bson:"token,omitempty"`
 	Banned       bool          `json:"banned" bson:"banned"`
 	CreatedAt    time.Time     `json:"created_at" bson:"created_at"`
+	UpdatedAt    time.Time     `json:"updated_at" bson:"updated_at"`
 }
