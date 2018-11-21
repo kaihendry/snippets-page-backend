@@ -2,6 +2,7 @@ package endpoint
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -12,6 +13,11 @@ import (
 
 	"github.com/labstack/echo"
 )
+
+//PublicSnippets returns all public snippets from all users in database
+func (e *Endpoint) PublicSnippets(context echo.Context) error {
+	return context.JSON(200, "All public snippets....")
+}
 
 //FetchSnippets returs snippets for current auth user
 func (e *Endpoint) FetchSnippets(context echo.Context) (err error) {
@@ -65,6 +71,35 @@ func (e *Endpoint) CreateSnippet(context echo.Context) error {
 	return context.JSON(200, "dwelrwel;rwe")
 }
 
-func (e *Endpoint) UpdateSnippet(context echo.Context) error {
+func (e *Endpoint) UpdateSnippet(context echo.Context) (err error) {
+	id := context.Param("id")
+	snippet := new(model.Snippet)
+	if err = context.Bind(snippet); err != nil {
+		return err
+	}
+	if err = context.Validate(snippet); err != nil {
+		return err
+	}
+
+	err = e.Db.C("snippets").Update(
+		bson.M{"$and": []bson.M{bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}}},
+		bson.M{"$set": bson.M{
+			"marked":     snippet.Marked,
+			"title":      snippet.Title,
+			"text":       snippet.Text,
+			"language":   snippet.Language,
+			"labels":     snippet.Labels,
+			"public":     snippet.Public,
+			"updated_at": time.Now(),
+		}},
+	)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusOK, "Return data")
+	}
+
 	return context.JSON(200, "test")
+}
+
+func (e *Endpoint) DeleteSnippet(context echo.Context) error {
+	return context.JSON(200, "hello world...")
 }

@@ -42,7 +42,8 @@ func main() {
 	//snipepts
 	router.GET("/me/snippets", endpoint.FetchSnippets)
 	router.POST("/me/snippets", endpoint.CreateSnippet)
-	router.PUT("/me/snippets/", endpoint.UpdateSnippet)
+	router.PUT("/me/snippets/:id", endpoint.UpdateSnippet)
+	router.DELETE("/me/snippets/:id", endpoint.DeleteSnippet)
 
 	e.Start(":8888")
 }
