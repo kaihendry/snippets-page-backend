@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo"
 )
 
+//Endpoint represents HTTP request handler
 type Endpoint struct {
 	Db *mgo.Database
 }
