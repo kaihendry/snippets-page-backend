@@ -12,42 +12,42 @@ import (
 	"snippets.page-backend/model"
 )
 
-//CreateUser - registration new user
+//CreateUser - user registration
 //[POST] /v1/users
 func (e *Endpoint) CreateUser(context echo.Context) (err error) {
-	u := &model.User{ID: bson.NewObjectId(), CreatedAt: time.Now()}
-	if err = context.Bind(u); err != nil {
+	user := &model.User{ID: bson.NewObjectId(), CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	if err = context.Bind(user); err != nil {
 		return err
 	}
-	if err = context.Validate(u); err != nil {
-		return err
+	if err = context.Validate(user); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	user := &model.User{}
-	if err = e.Db.C("users").Find(bson.M{"$or": []bson.M{bson.M{"login": u.Login}, bson.M{"email": u.Email}}}).One(user); err == nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Email or login already exists"}
+	count, _ := e.Db.C("users").Find(bson.M{"$or": []bson.M{bson.M{"login": user.Login}, bson.M{"email": user.Email}}}).Count()
+	if count != 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Email or login already exists.")
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(context.FormValue("password")), bcrypt.DefaultCost)
 	if err != nil {
-		return &echo.HTTPError{Code: http.StatusBadGateway, Message: "Something went fron..."}
+		return echo.NewHTTPError(http.StatusBadGateway, "Whoops, something went wrong...")
 	}
-	u.PasswordHash = string(hash)
-	err = e.Db.C("users").Insert(u)
+	user.PasswordHash = string(hash)
+	err = e.Db.C("users").Insert(user)
 	if err != nil {
-		return &echo.HTTPError{Code: http.StatusBadGateway, Message: "Something went fron..."}
+		return echo.NewHTTPError(http.StatusBadGateway, err.Error())
 	}
-	return context.JSON(http.StatusCreated, u)
+	return context.JSON(http.StatusCreated, user)
 }
 
-//Me - get the authenticated user
+//Me returns current user
 //[GET] /v1/me
 func (e *Endpoint) Me(context echo.Context) (err error) {
 	authUser := context.Get("user").(*jwt.Token)
 	claims := authUser.Claims.(jwt.MapClaims)
-	user := new(model.User)
+	user := &model.User{}
 	if err = e.Db.C("users").FindId(bson.ObjectIdHex(claims["id"].(string))).One(&user); err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Something went wrong..."}
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
-	return context.JSON(200, user)
+	return context.JSON(http.StatusOK, user)
 }
 
 //UpdateMe update current user
