@@ -23,9 +23,7 @@ func main() {
 
 	e.POST("v1/authentication", endpoint.Authentication)
 	e.POST("v1/users", endpoint.CreateUser)
-	e.GET("v1/snippets", func(context echo.Context) error {
-		return context.JSON(200, "all public snippets")
-	})
+	e.GET("v1/snippets", endpoint.GetAllPublicSnippets)
 	e.GET("v1/users", func(context echo.Context) error {
 		return context.JSON(200, "All users....")
 	})
@@ -39,7 +37,7 @@ func main() {
 	router.GET("/me", endpoint.Me)
 	router.PUT("/me", endpoint.UpdateMe)
 	//snipepts
-	router.GET("/me/snippets", endpoint.FetchSnippets)
+	router.GET("/me/snippets", endpoint.GetSnippets)
 	router.POST("/me/snippets", endpoint.CreateSnippet)
 	router.PUT("/me/snippets/:id", endpoint.UpdateSnippet)
 	router.DELETE("/me/snippets/:id", endpoint.DeleteSnippet)

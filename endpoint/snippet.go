@@ -1,87 +1,107 @@
 package endpoint
 
 import (
-	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
+	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/labstack/echo"
 	"snippets.page-backend/filter"
 	"snippets.page-backend/model"
 )
 
-//PublicSnippets returns all public snippets from all users in database
-func (e *Endpoint) PublicSnippets(context echo.Context) error {
-	return context.JSON(200, "All public snippets....")
-}
-
-//FetchSnippets returs snippets for current auth user
-func (e *Endpoint) FetchSnippets(context echo.Context) (err error) {
+//GetAllPublicSnippets returns all public snippets frrom database
+//[GET] /v1/snippets
+func (e *Endpoint) GetAllPublicSnippets(context echo.Context) (err error) {
 	query := filter.NewQuery()
 	if err = context.Bind(query); err != nil {
 		return err
 	}
 	if err = context.Validate(query); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	var snippets []bson.M
+	total, _ := e.Db.C("snippets").Find(bson.M{"public": true}).Count()
+	pipeline := []bson.M{
+		bson.M{"$match": bson.M{"public": true}},
+		bson.M{"$lookup": bson.M{"from": "users", "localField": "user_id", "foreignField": "_id", "as": "author"}},
+		bson.M{"$unwind": "$author"},
+		bson.M{"$project": bson.M{
+			"user_id":      1,
+			"title":        1,
+			"text":         1,
+			"language":     1,
+			"labels":       1,
+			"created_at":   1,
+			"author.login": 1,
+		}},
+		bson.M{"$skip": (query.Page - 1) * query.Limit},
+		bson.M{"$limit": query.Limit},
+	}
+	err = e.Db.C("snippets").Pipe(pipeline).All(&snippets)
+	e.addPaginationHeaders(context, query, total)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadGateway, nil)
+	}
+	return context.JSON(http.StatusOK, &snippets)
+}
+
+//GetSnippets returs snippets for current user
+//[GET] /v1/me/snippets
+func (e *Endpoint) GetSnippets(context echo.Context) (err error) {
+	query := filter.NewQuery()
+	if err = context.Bind(query); err != nil {
 		return err
 	}
-	var snippets []model.Snippet
-	e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Skip((query.Skip - 1) * query.Limit).Limit(query.Limit).All(&snippets)
-
-	totalSnippets, _ := e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Count()
-	totalPages := totalSnippets / query.Limit
-	context.Response().Header().Add("X-Pagination-Total-Count", strconv.Itoa(totalSnippets))
-	context.Response().Header().Add("X-Pagination-Page-Count", strconv.Itoa(totalPages))
-	context.Response().Header().Add("X-Pagination-Current-Page", strconv.Itoa(query.Skip))
-	context.Response().Header().Add("X-Pagination-Per-Page", strconv.Itoa(query.Limit))
-	//FIX: next
-	context.Response().Header().Add("Link", fmt.Sprintf("<http://localhost/users?page=%d>; rel=self, <http://localhost/users?page=%d>; rel=next, <http://localhost/users?page=%d>; rel=last", query.Skip, query.Skip+1, totalPages))
-
-	return context.JSON(200, snippets)
-}
-
-//CreateSnippet for current user
-func (e *Endpoint) CreateSnippet(context echo.Context) error {
-
-	for i := 0; i < 100; i++ {
-		fmt.Println("RAND SNIPPET...")
-
-		snippet := model.Snippet{
-			Title:     "Snippet Number" + string(i),
-			Text:      "Text" + string(i),
-			UserID:    bson.ObjectIdHex("5becbd83f23efbecdd769c40"),
-			Language:  "JS",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-
-		err := e.Db.C("snippets").Insert(snippet)
-
-		if err != nil {
-			fmt.Println(err)
-		}
-
+	if err = context.Validate(query); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-
-	fmt.Println("end..")
-
-	return context.JSON(200, "dwelrwel;rwe")
+	var snippets []model.Snippet
+	e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Skip((query.Page - 1) * query.Limit).Limit(query.Limit).All(&snippets)
+	total, _ := e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Count()
+	e.addPaginationHeaders(context, query, total)
+	return context.JSON(http.StatusOK, snippets)
 }
 
-func (e *Endpoint) UpdateSnippet(context echo.Context) (err error) {
-	id := context.Param("id")
-	snippet := new(model.Snippet)
+//CreateSnippet creates snippet by current user
+//[POST] /v1/me/snippets
+func (e *Endpoint) CreateSnippet(context echo.Context) (err error) {
+	snippet := &model.Snippet{
+		ID:        bson.NewObjectId(),
+		UserID:    bson.NewObjectId(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 	if err = context.Bind(snippet); err != nil {
 		return err
 	}
 	if err = context.Validate(snippet); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err = e.Db.C("snippets").Insert(snippet); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	return context.JSON(http.StatusCreated, snippet)
+}
+
+//UpdateSnippet updates snippet by id for current user
+//[PUT] /me/snippets/<id>
+func (e *Endpoint) UpdateSnippet(context echo.Context) (err error) {
+	id := context.Param("id")
+	snippet := &model.Snippet{}
+	err = e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context)), "_id": bson.ObjectIdHex(id)}).One(&snippet)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
+	if err = context.Bind(snippet); err != nil {
 		return err
 	}
-
-	err = e.Db.C("snippets").Update(
-		bson.M{"$and": []bson.M{bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}}},
-		bson.M{"$set": bson.M{
+	if err = context.Validate(snippet); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	change := mgo.Change{
+		Update: bson.M{"$set": bson.M{
 			"marked":     snippet.Marked,
 			"title":      snippet.Title,
 			"text":       snippet.Text,
@@ -90,14 +110,24 @@ func (e *Endpoint) UpdateSnippet(context echo.Context) (err error) {
 			"public":     snippet.Public,
 			"updated_at": time.Now(),
 		}},
-	)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusOK, "Return data")
+		Upsert:    false,
+		Remove:    false,
+		ReturnNew: true,
 	}
-
-	return context.JSON(200, "test")
+	_, err = e.Db.C("snippets").FindId(bson.ObjectIdHex(id)).Apply(change, snippet)
+	if err != nil {
+		return err
+	}
+	return context.JSON(http.StatusOK, snippet)
 }
 
-func (e *Endpoint) DeleteSnippet(context echo.Context) error {
-	return context.JSON(200, "hello world...")
+//DeleteSnippet removes snippet by _id for current user
+//[DELETE] /v1/me/snippets/:id
+func (e *Endpoint) DeleteSnippet(context echo.Context) (err error) {
+	id := context.Param("id")
+	err = e.Db.C("snippets").Remove(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context)), "_id": bson.ObjectIdHex(id)})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
+	return context.JSON(http.StatusNoContent, nil)
 }

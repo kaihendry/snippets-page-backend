@@ -6,7 +6,7 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
-//Snippet model
+//Snippet represents resources in JSON format.
 type Snippet struct {
 	ID        bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	UserID    bson.ObjectId `json:"user_id" bson:"user_id"`
