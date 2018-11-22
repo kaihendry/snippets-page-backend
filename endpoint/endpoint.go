@@ -1,9 +1,9 @@
 package endpoint
 
 import (
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/globalsign/mgo"
 	"github.com/labstack/echo"
-	mgo "gopkg.in/mgo.v2"
 )
 
 type Endpoint struct {

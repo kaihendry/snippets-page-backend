@@ -6,12 +6,10 @@ import (
 	"strconv"
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
-
+	"github.com/globalsign/mgo/bson"
+	"github.com/labstack/echo"
 	"snippets.page-backend/filter"
 	"snippets.page-backend/model"
-
-	"github.com/labstack/echo"
 )
 
 //PublicSnippets returns all public snippets from all users in database

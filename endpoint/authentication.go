@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/globalsign/mgo/bson"
 	"github.com/labstack/echo"
 	"golang.org/x/crypto/bcrypt"
-	"gopkg.in/mgo.v2/bson"
 	"snippets.page-backend/model"
 )
 

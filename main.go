@@ -1,8 +1,7 @@
 package main
 
 import (
-	"gopkg.in/mgo.v2"
-
+	"github.com/globalsign/mgo"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"snippets.page-backend/endpoint"
