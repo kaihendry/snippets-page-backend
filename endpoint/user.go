@@ -1,7 +1,6 @@
 package endpoint
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -12,7 +11,7 @@ import (
 	"snippets.page-backend/model"
 )
 
-//CreateUser - user registration
+//CreateUser user registration
 //[POST] /v1/users
 func (e *Endpoint) CreateUser(context echo.Context) (err error) {
 	user := &model.User{ID: bson.NewObjectId(), CreatedAt: time.Now(), UpdatedAt: time.Now()}
@@ -26,7 +25,7 @@ func (e *Endpoint) CreateUser(context echo.Context) (err error) {
 	if count != 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Email or login already exists.")
 	}
-	hash, err := bcrypt.GenerateFromPassword([]byte(context.FormValue("password")), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadGateway, "Whoops, something went wrong...")
 	}
@@ -41,20 +40,11 @@ func (e *Endpoint) CreateUser(context echo.Context) (err error) {
 //Me returns current user
 //[GET] /v1/me
 func (e *Endpoint) Me(context echo.Context) (err error) {
-	authUser := context.Get("user").(*jwt.Token)
-	claims := authUser.Claims.(jwt.MapClaims)
+	gwt := context.Get("user").(*jwt.Token)
+	claims := gwt.Claims.(jwt.MapClaims)
 	user := &model.User{}
 	if err = e.Db.C("users").FindId(bson.ObjectIdHex(claims["id"].(string))).One(&user); err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 	return context.JSON(http.StatusOK, user)
-}
-
-//UpdateMe update current user
-func (e *Endpoint) UpdateMe(context echo.Context) error {
-
-	q := context.Get("user").(*jwt.Token)
-	fmt.Println(q)
-
-	return context.JSON(200, "hello world....")
 }

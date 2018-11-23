@@ -11,7 +11,6 @@ import (
 func main() {
 	//config := config.Load("config.json")
 	session, _ := mgo.Dial("localhost:27017")
-
 	db := session.DB("snippets_page")
 
 	endpoint := endpoint.Endpoint{
@@ -21,21 +20,13 @@ func main() {
 	e.Debug = true
 	e.Validator = validation.New()
 
-	e.POST("v1/authentication", endpoint.Authentication)
+	e.POST("v1/authorization", endpoint.Authorization)
 	e.POST("v1/users", endpoint.CreateUser)
 	e.GET("v1/snippets", endpoint.GetAllPublicSnippets)
-	e.GET("v1/users", func(context echo.Context) error {
-		return context.JSON(200, "All users....")
-	})
-
-	e.GET("v1/users/:userId/snippets", func(context echo.Context) error {
-		return context.JSON(200, "get all snippets by user")
-	})
 
 	router := e.Group("/v1")
 	router.Use(middleware.JWT([]byte("secret")))
 	router.GET("/me", endpoint.Me)
-	router.PUT("/me", endpoint.UpdateMe)
 	//snipepts
 	router.GET("/me/snippets", endpoint.GetSnippets)
 	router.POST("/me/snippets", endpoint.CreateSnippet)
