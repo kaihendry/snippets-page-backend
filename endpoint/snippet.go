@@ -7,40 +7,55 @@ import (
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/labstack/echo"
-	"snippets.page-backend/filter"
 	"snippets.page-backend/model"
+	"snippets.page-backend/model/filter"
 )
 
 //GetAllPublicSnippets returns all public snippets frrom database
 //[GET] /v1/snippets
 func (e *Endpoint) GetAllPublicSnippets(context echo.Context) (err error) {
-	query := filter.NewQuery()
-	if err = context.Bind(query); err != nil {
+	filter := filter.NewSnippet()
+	if err = context.Bind(filter); err != nil {
 		return err
 	}
-	if err = context.Validate(query); err != nil {
+	if err = context.Validate(filter); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	var snippets []bson.M
-	total, _ := e.Db.C("snippets").Find(bson.M{"public": true}).Count()
+	conditions := bson.M{}
+	conditions["public"] = true
+	if labels := filter.GetLabels(); labels != nil {
+		conditions["labels"] = bson.M{"$in": labels}
+	}
+	if language := filter.GetLanguage(); language != "" {
+		conditions["language"] = language
+	}
+	if keywords := filter.GetKeywords(); keywords != "" {
+		conditions["$text"] = bson.M{"$search": keywords}
+	}
 	pipeline := []bson.M{
-		bson.M{"$match": bson.M{"public": true}},
+		bson.M{"$match": conditions},
 		bson.M{"$lookup": bson.M{"from": "users", "localField": "user_id", "foreignField": "_id", "as": "author"}},
 		bson.M{"$unwind": "$author"},
 		bson.M{"$project": bson.M{
-			"user_id":      1,
-			"title":        1,
-			"text":         1,
-			"language":     1,
-			"labels":       1,
-			"created_at":   1,
-			"author.login": 1,
+			"user_id":         1,
+			"title":           1,
+			"text":            1,
+			"language":        1,
+			"labels":          1,
+			"created_at":      1,
+			"author.login":    1,
+			"masdfsdfsdfrked": 1,
 		}},
-		bson.M{"$skip": (query.Page - 1) * query.Limit},
-		bson.M{"$limit": query.Limit},
+		bson.M{"$skip": (filter.GetPage() - 1) * filter.GetLimit()},
+		bson.M{"$limit": filter.GetLimit()},
 	}
+	if sort := filter.GetSort(); sort != nil {
+		pipeline = append(pipeline, bson.M{"$sort": sort})
+	}
+	var snippets []bson.M
+	total, _ := e.Db.C("snippets").Find(bson.M{"public": true}).Count()
 	err = e.Db.C("snippets").Pipe(pipeline).All(&snippets)
-	e.addPaginationHeaders(context, query, total)
+	e.addPaginationHeaders(context, filter, total)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadGateway, nil)
 	}
@@ -50,17 +65,28 @@ func (e *Endpoint) GetAllPublicSnippets(context echo.Context) (err error) {
 //GetSnippets returs snippets for current user
 //[GET] /v1/me/snippets
 func (e *Endpoint) GetSnippets(context echo.Context) (err error) {
-	query := filter.NewQuery()
-	if err = context.Bind(query); err != nil {
+	filter := filter.NewSnippet()
+	if err = context.Bind(filter); err != nil {
 		return err
 	}
-	if err = context.Validate(query); err != nil {
+	if err = context.Validate(filter); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	var snippets []model.Snippet
-	e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Skip((query.Page - 1) * query.Limit).Limit(query.Limit).All(&snippets)
+	conditions := bson.M{}
+	conditions["user_id"] = bson.ObjectIdHex(e.getUserID(context))
+	if labels := filter.GetLabels(); labels != nil {
+		conditions["labels"] = bson.M{"$in": labels}
+	}
+	if language := filter.GetLanguage(); language != "" {
+		conditions["language"] = language
+	}
+	if keywords := filter.GetKeywords(); keywords != "" {
+		conditions["$text"] = bson.M{"$search": keywords}
+	}
+	e.Db.C("snippets").Find(conditions).Skip((filter.GetPage() - 1) * filter.GetLimit()).Limit(filter.GetLimit()).All(&snippets)
 	total, _ := e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Count()
-	e.addPaginationHeaders(context, query, total)
+	e.addPaginationHeaders(context, filter, total)
 	return context.JSON(http.StatusOK, snippets)
 }
 

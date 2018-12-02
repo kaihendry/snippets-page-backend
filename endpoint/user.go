@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/globalsign/mgo/bson"
 	"github.com/labstack/echo"
 	"golang.org/x/crypto/bcrypt"
@@ -40,10 +39,8 @@ func (e *Endpoint) CreateUser(context echo.Context) (err error) {
 //Me returns current user
 //[GET] /v1/me
 func (e *Endpoint) Me(context echo.Context) (err error) {
-	gwt := context.Get("user").(*jwt.Token)
-	claims := gwt.Claims.(jwt.MapClaims)
 	user := &model.User{}
-	if err = e.Db.C("users").FindId(bson.ObjectIdHex(claims["id"].(string))).One(&user); err != nil {
+	if err = e.Db.C("users").FindId(bson.ObjectIdHex(e.getUserID(context))).One(&user); err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 	return context.JSON(http.StatusOK, user)
