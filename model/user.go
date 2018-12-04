@@ -17,5 +17,5 @@ type User struct {
 	CreatedAt    time.Time     `json:"created_at" bson:"created_at"`
 	UpdatedAt    time.Time     `json:"updated_at" bson:"updated_at"`
 	//only for registration
-	Password string `json:"-" bson:"-" validate:"required,gte=6,lte=50"`
+	Password string `json:"password,omitempty" bson:"-" validate:"required,gte=5,lte=50"`
 }

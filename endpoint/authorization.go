@@ -28,7 +28,7 @@ func (e *Endpoint) Authorization(context echo.Context) (err error) {
 		},
 	}).One(&user)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusForbidden, err.Error)
+		return echo.NewHTTPError(http.StatusForbidden, "Access denied")
 	}
 	if err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(auth.Password)); err != nil {
 		return echo.NewHTTPError(http.StatusForbidden, "Access denied")

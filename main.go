@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/globalsign/mgo"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -19,6 +21,10 @@ func main() {
 	e := echo.New()
 	e.Debug = true
 	e.Validator = validation.New()
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:8080", "http://localhost:8080"},
+		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
+	}))
 
 	e.POST("v1/authorization", endpoint.Authorization)
 	e.POST("v1/users", endpoint.CreateUser)

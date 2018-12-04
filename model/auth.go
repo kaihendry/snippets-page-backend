@@ -2,6 +2,6 @@ package model
 
 //Authorization special struct for auth
 type Authorization struct {
-	LoginOrEmail string `bson:"login_or_email" validate:"required" form:"login_or_email"`
-	Password     string `bson:"password" validate:"required"`
+	LoginOrEmail string `json:"login" bson:"login" validate:"required" form:"login"`
+	Password     string `json:"password" bson:"password" validate:"required" form:"password"`
 }
