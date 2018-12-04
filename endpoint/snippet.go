@@ -157,3 +157,14 @@ func (e *Endpoint) DeleteSnippet(context echo.Context) (err error) {
 	}
 	return context.JSON(http.StatusNoContent, nil)
 }
+
+//GetLabels returns unique labels
+func (e *Endpoint) GetLabels(context echo.Context) (err error) {
+
+	var result []string
+	err = e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Distinct("labels", &result)
+	if err != nil {
+		return context.JSON(http.StatusNoContent, nil)
+	}
+	return context.JSON(http.StatusOK, result)
+}
