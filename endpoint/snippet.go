@@ -39,8 +39,7 @@ func (e *Endpoint) GetAllPublicSnippets(context echo.Context) (err error) {
 		bson.M{"$project": bson.M{
 			"user_id":         1,
 			"title":           1,
-			"text":            1,
-			"language":        1,
+			"files":           1,
 			"labels":          1,
 			"created_at":      1,
 			"author.login":    1,
@@ -128,10 +127,9 @@ func (e *Endpoint) UpdateSnippet(context echo.Context) (err error) {
 	}
 	change := mgo.Change{
 		Update: bson.M{"$set": bson.M{
-			"marked":     snippet.Marked,
+			"favorite":   snippet.Favorite,
 			"title":      snippet.Title,
-			"text":       snippet.Text,
-			"language":   snippet.Language,
+			"files":      snippet.Files,
 			"labels":     snippet.Labels,
 			"public":     snippet.Public,
 			"updated_at": time.Now(),
