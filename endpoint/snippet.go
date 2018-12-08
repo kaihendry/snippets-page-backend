@@ -48,7 +48,7 @@ func (e *Endpoint) GetAllPublicSnippets(context echo.Context) (err error) {
 	if sort := filter.GetSort(); sort != nil {
 		pipeline = append(pipeline, bson.M{"$sort": sort})
 	}
-	var snippets []bson.M
+	snippets := make([]bson.M, 0)
 	total, _ := e.Db.C("snippets").Find(bson.M{"public": true}).Count()
 	err = e.Db.C("snippets").Pipe(pipeline).All(&snippets)
 	e.addPaginationHeaders(context, filter, total)
@@ -68,7 +68,7 @@ func (e *Endpoint) GetSnippets(context echo.Context) (err error) {
 	if err = context.Validate(filter); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	var snippets []model.Snippet
+	snippets := make([]model.Snippet, 0)
 	conditions := bson.M{}
 	conditions["user_id"] = bson.ObjectIdHex(e.getUserID(context))
 	if tags := filter.GetTags(); tags != nil {
@@ -153,7 +153,7 @@ func (e *Endpoint) DeleteSnippet(context echo.Context) (err error) {
 //GetTags returns unique labels
 func (e *Endpoint) GetTags(context echo.Context) (err error) {
 
-	var result []string
+	result := make([]string, 0)
 	err = e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Distinct("labels", &result)
 	if err != nil {
 		return context.JSON(http.StatusNoContent, nil)
