@@ -23,11 +23,8 @@ func (e *Endpoint) GetAllPublicSnippets(context echo.Context) (err error) {
 	}
 	conditions := bson.M{}
 	conditions["public"] = true
-	if labels := filter.GetLabels(); labels != nil {
-		conditions["labels"] = bson.M{"$in": labels}
-	}
-	if language := filter.GetLanguage(); language != "" {
-		conditions["language"] = language
+	if tags := filter.GetTags(); tags != nil {
+		conditions["tags"] = bson.M{"$in": tags}
 	}
 	if keywords := filter.GetKeywords(); keywords != "" {
 		conditions["$text"] = bson.M{"$search": keywords}
@@ -40,7 +37,7 @@ func (e *Endpoint) GetAllPublicSnippets(context echo.Context) (err error) {
 			"user_id":         1,
 			"title":           1,
 			"files":           1,
-			"labels":          1,
+			"tags":            1,
 			"created_at":      1,
 			"author.login":    1,
 			"masdfsdfsdfrked": 1,
@@ -74,11 +71,8 @@ func (e *Endpoint) GetSnippets(context echo.Context) (err error) {
 	var snippets []model.Snippet
 	conditions := bson.M{}
 	conditions["user_id"] = bson.ObjectIdHex(e.getUserID(context))
-	if labels := filter.GetLabels(); labels != nil {
-		conditions["labels"] = bson.M{"$in": labels}
-	}
-	if language := filter.GetLanguage(); language != "" {
-		conditions["language"] = language
+	if tags := filter.GetTags(); tags != nil {
+		conditions["tags"] = bson.M{"$in": tags}
 	}
 	if keywords := filter.GetKeywords(); keywords != "" {
 		conditions["$text"] = bson.M{"$search": keywords}
@@ -94,7 +88,7 @@ func (e *Endpoint) GetSnippets(context echo.Context) (err error) {
 func (e *Endpoint) CreateSnippet(context echo.Context) (err error) {
 	snippet := &model.Snippet{
 		ID:        bson.NewObjectId(),
-		UserID:    bson.NewObjectId(),
+		UserID:    bson.ObjectIdHex(e.getUserID(context)),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -130,7 +124,7 @@ func (e *Endpoint) UpdateSnippet(context echo.Context) (err error) {
 			"favorite":   snippet.Favorite,
 			"title":      snippet.Title,
 			"files":      snippet.Files,
-			"labels":     snippet.Labels,
+			"tags":       snippet.Tags,
 			"public":     snippet.Public,
 			"updated_at": time.Now(),
 		}},
@@ -156,8 +150,8 @@ func (e *Endpoint) DeleteSnippet(context echo.Context) (err error) {
 	return context.JSON(http.StatusNoContent, nil)
 }
 
-//GetLabels returns unique labels
-func (e *Endpoint) GetLabels(context echo.Context) (err error) {
+//GetTags returns unique labels
+func (e *Endpoint) GetTags(context echo.Context) (err error) {
 
 	var result []string
 	err = e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Distinct("labels", &result)

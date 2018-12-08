@@ -35,7 +35,7 @@ func main() {
 	router.GET("/me", endpoint.Me)
 	//snipepts
 	router.GET("/me/snippets", endpoint.GetSnippets)
-	router.GET("/me/snippets/labels", endpoint.GetLabels)
+	router.GET("/me/snippets/tags", endpoint.GetTags)
 	router.POST("/me/snippets", endpoint.CreateSnippet)
 	router.PUT("/me/snippets/:id", endpoint.UpdateSnippet)
 	router.DELETE("/me/snippets/:id", endpoint.DeleteSnippet)

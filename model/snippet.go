@@ -14,7 +14,7 @@ type Snippet struct {
 	Title     string        `json:"title" bson:"title" validate:"required,gte=1,lte=40"`
 	Files     []interface{} `json:"files" bson:"files"`
 	Public    bool          `json:"public" bson:"public"`
-	Labels    []string      `json:"labels" bson:"labels"`
+	Tags      []string      `json:"tags" bson:"tags"`
 	CreatedAt time.Time     `json:"created_at" bson:"created_at"`
 	UpdatedAt time.Time     `json:"updated_at" bson:"updated_at"`
 }
