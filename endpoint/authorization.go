@@ -39,7 +39,7 @@ func (e *Endpoint) Authorization(context echo.Context) (err error) {
 	claims["login"] = user.Login
 	claims["email"] = user.Email
 	claims["_id"] = user.ID
-	claims["exp"] = time.Now().Add(time.Hour).Unix()
+	claims["exp"] = time.Now().Add(time.Hour * 5).Unix()
 	t, err := token.SignedString([]byte("secret"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadGateway, "Something went wrong...")

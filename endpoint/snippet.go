@@ -154,7 +154,7 @@ func (e *Endpoint) DeleteSnippet(context echo.Context) (err error) {
 func (e *Endpoint) GetTags(context echo.Context) (err error) {
 
 	result := make([]string, 0)
-	err = e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Distinct("labels", &result)
+	err = e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Distinct("tags", &result)
 	if err != nil {
 		return context.JSON(http.StatusNoContent, nil)
 	}
