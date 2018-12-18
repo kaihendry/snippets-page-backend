@@ -77,6 +77,9 @@ func (e *Endpoint) GetSnippets(context echo.Context) (err error) {
 	if keywords := filter.GetKeywords(); keywords != "" {
 		conditions["$text"] = bson.M{"$search": keywords}
 	}
+	if favorites := filter.GetFavorites(); favorites == true {
+		conditions["favorite"] = true
+	}
 	e.Db.C("snippets").Find(conditions).Skip((filter.GetPage() - 1) * filter.GetLimit()).Limit(filter.GetLimit()).All(&snippets)
 	total, _ := e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Count()
 	e.addPaginationHeaders(context, filter, total)

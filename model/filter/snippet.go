@@ -7,9 +7,10 @@ import (
 //Snippet filter for snippets
 type Snippet struct {
 	Base
-	Tags   string `query:"filter[tags]"`
-	Search string `query:"q"`
-	Fields string `query:"fields"`
+	Tags      string `query:"filter[tags]"`
+	Search    string `query:"q"`
+	Favorites bool   `query:"favorites"`
+	Fields    string `query:"fields"`
 }
 
 //NewSnippet init filter for snippets
@@ -32,4 +33,8 @@ func (s *Snippet) GetTags() []string {
 //GetKeywords
 func (s *Snippet) GetKeywords() string {
 	return s.Search
+}
+
+func (s *Snippet) GetFavorites() bool {
+	return s.Favorites
 }
