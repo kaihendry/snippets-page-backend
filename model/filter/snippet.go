@@ -9,7 +9,7 @@ type Snippet struct {
 	Base
 	Tags      string `query:"filter[tags]"`
 	Search    string `query:"q"`
-	Favorites bool   `query:"favorites"`
+	Favorites bool   `query:"filter[favorites]"`
 	Fields    string `query:"fields"`
 }
 
