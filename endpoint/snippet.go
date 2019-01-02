@@ -34,13 +34,12 @@ func (e *Endpoint) GetAllPublicSnippets(context echo.Context) (err error) {
 		bson.M{"$lookup": bson.M{"from": "users", "localField": "user_id", "foreignField": "_id", "as": "author"}},
 		bson.M{"$unwind": "$author"},
 		bson.M{"$project": bson.M{
-			"user_id":         1,
-			"title":           1,
-			"files":           1,
-			"tags":            1,
-			"created_at":      1,
-			"author.login":    1,
-			"masdfsdfsdfrked": 1,
+			"user_id":      1,
+			"title":        1,
+			"files":        1,
+			"tags":         1,
+			"created_at":   1,
+			"author.login": 1,
 		}},
 		bson.M{"$skip": (filter.GetPage() - 1) * filter.GetLimit()},
 		bson.M{"$limit": filter.GetLimit()},
@@ -68,7 +67,7 @@ func (e *Endpoint) GetSnippets(context echo.Context) (err error) {
 	if err = context.Validate(filter); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	snippets := make([]model.Snippet, 0)
+	snippets := make([]bson.M, 0)
 	conditions := bson.M{}
 	conditions["user_id"] = bson.ObjectIdHex(e.getUserID(context))
 	if tags := filter.GetTags(); tags != nil {
@@ -80,7 +79,7 @@ func (e *Endpoint) GetSnippets(context echo.Context) (err error) {
 	if favorites := filter.GetFavorites(); favorites == true {
 		conditions["favorite"] = true
 	}
-	e.Db.C("snippets").Find(conditions).Skip((filter.GetPage() - 1) * filter.GetLimit()).Limit(filter.GetLimit()).All(&snippets)
+	e.Db.C("snippets").Find(conditions).Select(filter.GetFields()).Skip((filter.GetPage() - 1) * filter.GetLimit()).Limit(filter.GetLimit()).All(&snippets)
 	total, _ := e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Count()
 	e.addPaginationHeaders(context, filter, total)
 	return context.JSON(http.StatusOK, snippets)
