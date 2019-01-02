@@ -85,6 +85,16 @@ func (e *Endpoint) GetSnippets(context echo.Context) (err error) {
 	return context.JSON(http.StatusOK, snippets)
 }
 
+func (e *Endpoint) GetSnippet(context echo.Context) (err error) {
+	id := context.Param("id")
+	snippet := &model.Snippet{}
+	err = e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context)), "_id": bson.ObjectIdHex(id)}).One(&snippet)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
+	return context.JSON(http.StatusOK, snippet)
+}
+
 //CreateSnippet creates snippet by current user
 //[POST] /v1/me/snippets
 func (e *Endpoint) CreateSnippet(context echo.Context) (err error) {
