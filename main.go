@@ -15,7 +15,7 @@ import (
 
 func main() {
 	//config := config.Load("config.json")
-	session, err := mgo.DialWithTimeout("mongodb://mongo:27017", time.Duration(15*time.Second))
+	session, err := mgo.DialWithTimeout("localhost:27017", time.Duration(15*time.Second))
 	if err != nil {
 		log.Fatalln(err)
 		os.Exit(1)
@@ -29,6 +29,7 @@ func main() {
 	e := echo.New()
 	e.Debug = true
 	e.Validator = validation.New()
+	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{}))
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:8080", "http://localhost:8080"},
 		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
