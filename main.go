@@ -1,7 +1,10 @@
 package main
 
 import (
+	"log"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/globalsign/mgo"
 	"github.com/labstack/echo"
@@ -12,9 +15,14 @@ import (
 
 func main() {
 	//config := config.Load("config.json")
-	session, _ := mgo.Dial("localhost:27017")
+	session, err := mgo.DialWithTimeout("mongodb://mongo:27017", time.Duration(15*time.Second))
+	if err != nil {
+		log.Fatalln(err)
+		os.Exit(1)
+	}
+	defer session.Close()
+	session.SetMode(mgo.Monotonic, true)
 	db := session.DB("snippets_page")
-
 	endpoint := endpoint.Endpoint{
 		Db: db,
 	}
