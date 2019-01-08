@@ -25,21 +25,23 @@ func main() {
 		AllowOrigins: []string{"http://localhost:8080", "http://localhost:8080"},
 		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
 	}))
-
-	e.POST("v1/authorization", endpoint.Authorization)
-	e.POST("v1/users", endpoint.CreateUser)
-	e.GET("v1/snippets", endpoint.GetAllPublicSnippets)
-
+	//public
 	router := e.Group("/v1")
-	router.Use(middleware.JWT([]byte("secret")))
-	router.GET("/me", endpoint.Me)
-	//snipepts
-	router.GET("/me/snippets", endpoint.GetSnippets)
-	router.GET("/me/snippets/:id", endpoint.GetSnippet)
-	router.GET("/me/snippets/tags", endpoint.GetTags)
-	router.POST("/me/snippets", endpoint.CreateSnippet)
-	router.PUT("/me/snippets/:id", endpoint.UpdateSnippet)
-	router.DELETE("/me/snippets/:id", endpoint.DeleteSnippet)
+	router.GET("/ping", func(context echo.Context) error {
+		return context.String(http.StatusOK, "pong")
+	})
+	router.POST("/authorization", endpoint.Authorization)
+	router.POST("/users", endpoint.CreateUser)
+	router.GET("/snippets", endpoint.GetAllPublicSnippets)
+	//private
+	secure := e.Group("/v1", middleware.JWT([]byte("secret")))
+	secure.GET("/me", endpoint.Me)
+	secure.GET("/me/snippets", endpoint.GetSnippets)
+	secure.GET("/me/snippets/:id", endpoint.GetSnippet)
+	secure.GET("/me/snippets/tags", endpoint.GetTags)
+	secure.POST("/me/snippets", endpoint.CreateSnippet)
+	secure.PUT("/me/snippets/:id", endpoint.UpdateSnippet)
+	secure.DELETE("/me/snippets/:id", endpoint.DeleteSnippet)
 
 	e.Start(":8888")
 }
