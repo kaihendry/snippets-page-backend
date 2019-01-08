@@ -30,6 +30,7 @@ func main() {
 	e.Debug = true
 	e.Validator = validation.New()
 	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{}))
+	e.Use(middleware.Logger())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:8080", "http://localhost:8080"},
 		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
