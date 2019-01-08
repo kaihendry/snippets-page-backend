@@ -4,5 +4,5 @@ package filter
 type Filter interface {
 	GetLimit() int
 	GetPage() int
-	GetSort() map[string]int
+	GetSort() string
 }

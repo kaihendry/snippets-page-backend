@@ -44,9 +44,9 @@ func (e *Endpoint) GetAllPublicSnippets(context echo.Context) (err error) {
 		bson.M{"$skip": (filter.GetPage() - 1) * filter.GetLimit()},
 		bson.M{"$limit": filter.GetLimit()},
 	}
-	if sort := filter.GetSort(); sort != nil {
-		pipeline = append(pipeline, bson.M{"$sort": sort})
-	}
+	//if sort := filter.GetSort(); sort != "nil" {
+	//	pipeline = append(pipeline, bson.M{"$sort": sort})
+	//}
 	snippets := make([]bson.M, 0)
 	total, _ := e.Db.C("snippets").Find(bson.M{"public": true}).Count()
 	err = e.Db.C("snippets").Pipe(pipeline).All(&snippets)
@@ -79,7 +79,8 @@ func (e *Endpoint) GetSnippets(context echo.Context) (err error) {
 	if favorites := filter.GetFavorites(); favorites == true {
 		conditions["favorite"] = true
 	}
-	e.Db.C("snippets").Find(conditions).Select(filter.GetFields()).Skip((filter.GetPage() - 1) * filter.GetLimit()).Limit(filter.GetLimit()).All(&snippets)
+
+	e.Db.C("snippets").Find(conditions).Sort(filter.GetSort()).Select(filter.GetFields()).Skip((filter.GetPage() - 1) * filter.GetLimit()).Limit(filter.GetLimit()).All(&snippets)
 	total, _ := e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Count()
 	e.addPaginationHeaders(context, filter, total)
 	return context.JSON(http.StatusOK, snippets)

@@ -1,7 +1,5 @@
 package filter
 
-import "strings"
-
 //Base common query filter
 type Base struct {
 	Limit int    `query:"limit"`
@@ -20,20 +18,18 @@ func (query *Base) GetPage() int {
 }
 
 //GetSort returns map with fields
-func (query *Base) GetSort() map[string]int {
-	if query.Sort == "" {
-		return nil
-	}
-	sort := make(map[string]int)
-	fields := strings.Split(query.Sort, ",")
-	for _, field := range fields {
-		if string([]rune(field)[0]) == "-" {
-			sort[field[1:]] = -1
-		} else if string([]rune(field)[0]) == "+" {
-			sort[field[1:]] = +1
-		} else {
-			sort[field] = +1
-		}
-	}
-	return sort
+func (query *Base) GetSort() string {
+	return query.Sort
 }
+
+// sort := make(map[string]int)
+// 	fields := strings.Split(query.Sort, ",")
+// 	for _, field := range fields {
+// 		if string([]rune(field)[0]) == "-" {
+// 			sort[field[1:]] = -1
+// 		} else if string([]rune(field)[0]) == "+" {
+// 			sort[field[1:]] = +1
+// 		} else {
+// 			sort[field] = +1
+// 		}
+// 	}

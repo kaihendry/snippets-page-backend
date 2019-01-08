@@ -17,7 +17,7 @@ type Snippet struct {
 func NewSnippet() *Snippet {
 	filter := &Snippet{}
 	filter.Page = 1
-	filter.Limit = 50
+	filter.Limit = 30
 	filter.Sort = "-created_at"
 	return filter
 }
