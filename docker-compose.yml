@@ -1,14 +1,13 @@
-version: '3.3'
+version: '2.0'
 services:
     app:
-        image: golang
-        container_name: "sp_server"
+        build: .
         volumes:
             - '.:/go/src/snippets.page-backend'
         ports:
             - "8888:8888"
         working_dir: /go/src/snippets.page-backend
-        command: go run main.go
+        #restart: always 
         depends_on:
             - mongo
     mongo:
