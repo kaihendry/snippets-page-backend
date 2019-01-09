@@ -15,7 +15,7 @@ import (
 
 func main() {
 	//config := config.Load("config.json")
-	session, err := mgo.DialWithTimeout("localhost:27017", time.Duration(15*time.Second))
+	session, err := mgo.DialWithTimeout("mongo:27017", time.Duration(15*time.Second))
 	if err != nil {
 		log.Fatalln(err)
 		os.Exit(1)
