@@ -2,3 +2,4 @@
 vendor/*/
 data/db/
 config.json
+letsencrypt.log
