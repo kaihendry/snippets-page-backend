@@ -13,7 +13,14 @@ import (
 	"snippets.page-backend/validation"
 )
 
+type (
+	Host struct {
+		Echo *echo.Echo
+	}
+)
+
 func main() {
+	hosts := map[string]*Host{}
 	//config := config.Load("config.json")
 	session, err := mgo.DialWithTimeout("mongo:27017", time.Duration(15*time.Second))
 	if err != nil {
@@ -26,32 +33,52 @@ func main() {
 	endpoint := endpoint.Endpoint{
 		Db: db,
 	}
-	e := echo.New()
-	e.Debug = true
-	e.Validator = validation.New()
-	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{}))
-	e.Use(middleware.Logger())
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+	app := echo.New()
+	app.Use(middleware.Logger())
+	app.Use(middleware.Recover())
+	hosts["cloud.snippets.page:8888"] = &Host{app}
+	app.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "this is app")
+	})
+	api := echo.New()
+	api.Debug = true
+	api.Validator = validation.New()
+	api.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{}))
+	api.Use(middleware.Logger())
+	api.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:8080", "http://localhost:8080"},
 		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
 	}))
+	hosts["api.snippets.page:8888"] = &Host{api}
 	//public
-	router := e.Group("/v1")
-	router.GET("/ping", func(context echo.Context) error {
+	public := api.Group("/v1")
+	public.GET("/ping", func(context echo.Context) error {
 		return context.String(http.StatusOK, "pong")
 	})
-	router.POST("/authorization", endpoint.Authorization)
-	router.POST("/users", endpoint.CreateUser)
-	router.GET("/snippets", endpoint.GetAllPublicSnippets)
+	public.POST("/authorization", endpoint.Authorization)
+	public.POST("/users", endpoint.CreateUser)
+	public.GET("/snippets", endpoint.GetAllPublicSnippets)
 	//private
-	secure := e.Group("/v1", middleware.JWT([]byte("secret")))
-	secure.GET("/me", endpoint.Me)
-	secure.GET("/me/snippets", endpoint.GetSnippets)
-	secure.GET("/me/snippets/:id", endpoint.GetSnippet)
-	secure.GET("/me/snippets/tags", endpoint.GetTags)
-	secure.POST("/me/snippets", endpoint.CreateSnippet)
-	secure.PUT("/me/snippets/:id", endpoint.UpdateSnippet)
-	secure.DELETE("/me/snippets/:id", endpoint.DeleteSnippet)
-
-	e.Start(":8888")
+	private := api.Group("/v1", middleware.JWT([]byte("secret")))
+	private.GET("/me", endpoint.Me)
+	private.GET("/me/snippets", endpoint.GetSnippets)
+	private.GET("/me/snippets/:id", endpoint.GetSnippet)
+	private.GET("/me/snippets/tags", endpoint.GetTags)
+	private.POST("/me/snippets", endpoint.CreateSnippet)
+	private.PUT("/me/snippets/:id", endpoint.UpdateSnippet)
+	private.DELETE("/me/snippets/:id", endpoint.DeleteSnippet)
+	//server
+	e := echo.New()
+	e.Any("/*", func(c echo.Context) (err error) {
+		req := c.Request()
+		res := c.Response()
+		host := hosts[req.Host]
+		if host == nil {
+			err = echo.ErrNotFound
+		} else {
+			host.Echo.ServeHTTP(res, req)
+		}
+		return
+	})
+	e.Logger.Fatal(e.Start(":8888"))
 }
