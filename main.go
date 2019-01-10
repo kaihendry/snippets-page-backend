@@ -40,9 +40,12 @@ func main() {
 	}
 	app := echo.New()
 	hosts[config.App.Frontend] = &Host{app}
-	app.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "this is app")
-	})
+	app.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		Root:   "frontend",
+		Browse: true,
+		HTML5:  true,
+	}))
+
 	api := echo.New()
 	api.Validator = validation.New()
 	api.Use(middleware.CORSWithConfig(middleware.CORSConfig{
