@@ -46,7 +46,7 @@ func main() {
 	api := echo.New()
 	api.Validator = validation.New()
 	api.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:8080", "http://localhost:8080"},
+		AllowOrigins: []string{"*"},
 		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
 	}))
 	hosts[config.App.Backend] = &Host{api}
