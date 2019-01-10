@@ -5,7 +5,7 @@ services:
         volumes:
             - '.:/go/src/snippets.page-backend'
         ports:
-            - "8888:8888"
+            - "8080:8080"
         working_dir: /go/src/snippets.page-backend
         #restart: always 
         depends_on:
