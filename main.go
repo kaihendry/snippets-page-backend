@@ -82,5 +82,9 @@ func main() {
 		}
 		return
 	})
-	e.Logger.Fatal(e.Start(config.App.Port))
+	if config.TLS.Enable == true {
+		e.StartTLS(config.App.Port, config.TLS.Cert, config.TLS.Key)
+	} else {
+		e.Start(config.App.Port)
+	}
 }

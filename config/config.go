@@ -20,8 +20,9 @@ type Config struct {
 	CORS struct {
 	}
 	TLS struct {
-		Cert string `json:"cert"`
-		Key  string `json:"key"`
+		Enable bool   `json:"enable"`
+		Cert   string `json:"cert"`
+		Key    string `json:"key"`
 	}
 }
 

@@ -11,7 +11,8 @@
     "jwt": {},
     "cors": {},
     "tls": {
-        "cert": "",
-        "key": ""
+        "enable": false,
+        "cert": "tls/cert.pem",
+        "key": "tls/key.pem"
     }
 }
