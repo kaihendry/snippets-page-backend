@@ -1,0 +1,17 @@
+{
+    "app": {
+        "frontend": "localhost:8888",
+        "backend": "api.localhost:8888",
+        "port": ":8888"
+    },
+    "db": {
+        "connectionAddress": "localhost:27017",
+        "database": "snippets_page"
+    },
+    "jwt": {},
+    "cors": {},
+    "tls": {
+        "cert": "",
+        "key": ""
+    }
+}

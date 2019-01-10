@@ -2,36 +2,35 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 )
 
 //Config - main app
 type Config struct {
-	Server struct {
-		Port int `json:"port"`
+	App struct {
+		Frontend string `json:"frontend"`
+		Backend  string `json:"backend"`
+		Port     string `json:"port"`
 	}
 	Db struct {
-		Address  string `json:"address"`
-		Port     int    `json:"port"`
-		Database string `json:"database"`
-		User     string `json:"user"`
-		Password string `json:"password"`
+		ConnectionAddress string `json:"connectionAddress"`
+		Database          string `json:"database"`
 	}
-	Logger struct {
-		Format string `json:"format"`
+	JWT  struct{}
+	CORS struct {
+	}
+	TLS struct {
+		Cert string `json:"cert"`
+		Key  string `json:"key"`
 	}
 }
 
 //Load - load from json
-func Load(filePath string) Config {
+func Load(filePath string) (Config, error) {
 	config := Config{}
 	file, error := os.Open(filePath)
-	if error != nil {
-		fmt.Println(error)
-	}
 	defer file.Close()
 	jsonParser := json.NewDecoder(file)
 	jsonParser.Decode(&config)
-	return config
+	return config, error
 }
