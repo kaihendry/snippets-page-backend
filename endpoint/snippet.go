@@ -29,30 +29,24 @@ func (e *Endpoint) GetAllPublicSnippets(context echo.Context) (err error) {
 	if keywords := filter.GetKeywords(); keywords != "" {
 		conditions["$text"] = bson.M{"$search": keywords}
 	}
+	if favorites := filter.GetFavorites(); favorites == true {
+		conditions["favorite"] = true
+	}
 	pipeline := []bson.M{
 		bson.M{"$match": conditions},
-		bson.M{"$lookup": bson.M{"from": "users", "localField": "user_id", "foreignField": "_id", "as": "author"}},
-		bson.M{"$unwind": "$author"},
-		bson.M{"$project": bson.M{
-			"user_id":      1,
-			"title":        1,
-			"files":        1,
-			"tags":         1,
-			"created_at":   1,
-			"author.login": 1,
-		}},
+		bson.M{"$lookup": bson.M{"from": "users", "localField": "user_id", "foreignField": "_id", "as": "user"}},
+		bson.M{"$unwind": "$user"},
+		bson.M{"$project": filter.GetFields()},
 		bson.M{"$skip": (filter.GetPage() - 1) * filter.GetLimit()},
 		bson.M{"$limit": filter.GetLimit()},
+		bson.M{"$sort": filter.GetSort()},
 	}
-	//if sort := filter.GetSort(); sort != "nil" {
-	//	pipeline = append(pipeline, bson.M{"$sort": sort})
-	//}
 	snippets := make([]bson.M, 0)
 	total, _ := e.Db.C("snippets").Find(bson.M{"public": true}).Count()
 	err = e.Db.C("snippets").Pipe(pipeline).All(&snippets)
 	e.addPaginationHeaders(context, filter, total)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadGateway, nil)
+		return echo.NewHTTPError(http.StatusBadGateway, err)
 	}
 	return context.JSON(http.StatusOK, &snippets)
 }
@@ -79,8 +73,14 @@ func (e *Endpoint) GetSnippets(context echo.Context) (err error) {
 	if favorites := filter.GetFavorites(); favorites == true {
 		conditions["favorite"] = true
 	}
-
-	e.Db.C("snippets").Find(conditions).Sort(filter.GetSort()).Select(filter.GetFields()).Skip((filter.GetPage() - 1) * filter.GetLimit()).Limit(filter.GetLimit()).All(&snippets)
+	pipeline := []bson.M{
+		bson.M{"$match": conditions},
+		bson.M{"$project": filter.GetFields()},
+		bson.M{"$skip": (filter.GetPage() - 1) * filter.GetLimit()},
+		bson.M{"$limit": filter.GetLimit()},
+		bson.M{"$sort": filter.GetSort()},
+	}
+	err = e.Db.C("snippets").Pipe(pipeline).All(&snippets)
 	total, _ := e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Count()
 	e.addPaginationHeaders(context, filter, total)
 	return context.JSON(http.StatusOK, snippets)
@@ -163,9 +163,9 @@ func (e *Endpoint) DeleteSnippet(context echo.Context) (err error) {
 	return context.JSON(http.StatusNoContent, nil)
 }
 
-//GetTags returns unique labels
+//GetTags returns collection of tags
+//[PUT] /me/tags/
 func (e *Endpoint) GetTags(context echo.Context) (err error) {
-
 	result := make([]string, 0)
 	err = e.Db.C("snippets").Find(bson.M{"user_id": bson.ObjectIdHex(e.getUserID(context))}).Distinct("tags", &result)
 	if err != nil {

@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -11,15 +12,28 @@ type Snippet struct {
 	Search    string `query:"q"`
 	Favorites bool   `query:"filter[favorites]"`
 	Fields    string `query:"fields"`
+	Sort      string `query:"sort" validate:"omitempty,eq=created_at|eq=-created_at"`
 }
 
 //NewSnippet init filter for snippets
 func NewSnippet() *Snippet {
 	filter := &Snippet{}
 	filter.Page = 1
-	filter.Limit = 30
+	filter.Limit = 100
 	filter.Sort = "-created_at"
+	filter.Fields = "_id,user_id,favorite,title,files,public,tags,created_at,updated_at"
 	return filter
+}
+
+func (s *Snippet) GetSort() map[string]int {
+	sort := make(map[string]int)
+	if string([]rune(s.Sort)[0]) == "-" {
+		sort[s.Sort[1:]] = -1
+	} else {
+		sort["created_at"] = +1
+	}
+	fmt.Println(sort)
+	return sort
 }
 
 //GetTags returs
