@@ -1,5 +1,4 @@
 ## SnippetsPage RESTful API service  
-![badge](https://img.shields.io/badge/BUILT%20WITH-LOVE-red.svg)\
 Backend of SnippetsPage application. Echo + MongoDB.
 
 **Project: [https://snippets.page](https://www.google.com)**\
@@ -41,7 +40,7 @@ Link: A set of navigational links allowing client to traverse the resources page
 
 ## Resources
 ### User
-![POST](https://placehold.it/12/248FB1/000000?text=+) POST https://cloud.snippets.page/v1/users\
+![POST](https://placehold.it/12/248FB1/000000?text=+) POST https://cloud.snippets.page/v1/users <br />
 ![GET](https://placehold.it/12/6BBD5B/000000?text=+) GET https://cloud.snippets.page/v1/me
 ```json
 {
@@ -55,11 +54,11 @@ Link: A set of navigational links allowing client to traverse the resources page
 }
 ```
 ### Snippet
-![GET](https://placehold.it/12/6BBD5B/000000?text=+) GET https://cloud.snippets.page/v1/snippets\
-![GET](https://placehold.it/12/6BBD5B/000000?text=+) GET https://cloud.snippets.page/v1/me/snippets\
-![POST](https://placehold.it/12/248FB1/000000?text=+) POST https://cloud.snippets.page/v1/me/snippets\
-![PUT](https://placehold.it/12/DF9D43/000000?text=+) PUT https://cloud.snippets.page/v1/me/snippets/:id\
-![DELETE](https://placehold.it/12/E27A7A/000000?text=+) DELETE https://cloud.snippets.page/v1/me/snippets/:id\
+![GET](https://placehold.it/12/6BBD5B/000000?text=+) GET https://cloud.snippets.page/v1/snippets <br />
+![GET](https://placehold.it/12/6BBD5B/000000?text=+) GET https://cloud.snippets.page/v1/me/snippets <br />
+![POST](https://placehold.it/12/248FB1/000000?text=+) POST https://cloud.snippets.page/v1/me/snippets <br />
+![PUT](https://placehold.it/12/DF9D43/000000?text=+) PUT https://cloud.snippets.page/v1/me/snippets/:id <br />
+![DELETE](https://placehold.it/12/E27A7A/000000?text=+) DELETE https://cloud.snippets.page/v1/me/snippets/:id <br />
 ![GET](https://placehold.it/12/6BBD5B/000000?text=+) GET https://cloud.snippets.page/v1/me/snippets/tags
 
 
