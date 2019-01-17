@@ -1,7 +1,5 @@
 {
     "app": {
-        "frontend": "cloud.localhost:80",
-        "backend": "api.localhost:80",
         "port": ":80"
     },
     "db": {
