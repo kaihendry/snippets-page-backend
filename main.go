@@ -14,14 +14,7 @@ import (
 	"snippets.page-backend/validation"
 )
 
-type (
-	Host struct {
-		Echo *echo.Echo
-	}
-)
-
 func main() {
-	hosts := map[string]*Host{}
 	config, err := config.Load("config.json")
 	if err != nil {
 		log.Fatalln(err)
@@ -39,28 +32,28 @@ func main() {
 		Db: db,
 	}
 	app := echo.New()
-	hosts[config.App.Frontend] = &Host{app}
-	app.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+	app.Debug = true
+	app.Use(middleware.Logger())
+	app.Use(middleware.Recover())
+	app.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{}))
+	app.Validator = validation.New()
+	app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
+	}))
+	//entry point (frontend)
+	entryPoint := app.Group("/")
+	entryPoint.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 		Root:   "frontend",
 		Browse: true,
 		HTML5:  true,
 	}))
-
-	api := echo.New()
-	api.Validator = validation.New()
-	api.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"},
-		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
-	}))
-	hosts[config.App.Backend] = &Host{api}
-	api.GET("/", func(context echo.Context) error {
-		return context.String(http.StatusOK, "Welcome to RESTful API service")
-	})
-	public := api.Group("/v1")
+	//API
+	public := app.Group("/v1")
 	public.POST("/authorization", endpoint.Authorization)
 	public.POST("/users", endpoint.CreateUser)
 	public.GET("/snippets", endpoint.GetAllPublicSnippets)
-	private := api.Group("/v1", middleware.JWT([]byte("secret")))
+	private := app.Group("/v1", middleware.JWT([]byte("secret")))
 	private.GET("/me", endpoint.Me)
 	private.GET("/me/snippets", endpoint.GetSnippets)
 	private.GET("/me/snippets/:id", endpoint.GetSnippet)
@@ -68,26 +61,9 @@ func main() {
 	private.POST("/me/snippets", endpoint.CreateSnippet)
 	private.PUT("/me/snippets/:id", endpoint.UpdateSnippet)
 	private.DELETE("/me/snippets/:id", endpoint.DeleteSnippet)
-	//server
-	e := echo.New()
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{}))
-	e.Debug = true
-	e.Any("/*", func(c echo.Context) (err error) {
-		req := c.Request()
-		res := c.Response()
-		host := hosts[req.Host]
-		if host == nil {
-			err = echo.ErrNotFound
-		} else {
-			host.Echo.ServeHTTP(res, req)
-		}
-		return
-	})
 	if config.TLS.Enable == true {
-		e.StartTLS(config.App.Port, config.TLS.Cert, config.TLS.Key)
+		app.StartTLS(config.App.Port, config.TLS.Cert, config.TLS.Key)
 	} else {
-		e.Start(config.App.Port)
+		app.Start(config.App.Port)
 	}
 }
