@@ -1,7 +1,7 @@
 ## SnippetsPage RESTful API service  
 Backend of SnippetsPage application. Echo + MongoDB.
 
-**Project: [https://snippets.page](https://www.google.com)**\
+**Project: [https://snippets.page](https://snippets.page)**\
 **Frontend GitHub repository: coming soon**
 
 ## JWT
