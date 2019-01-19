@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"strconv"
 
-	"snippets.page-backend/model/filter"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/globalsign/mgo"
 	"github.com/labstack/echo"
+	"snippets.page-backend/model/filter"
 )
 
 //Endpoint represents HTTP request handler
 type Endpoint struct {
-	Db *mgo.Database
+	Db        *mgo.Database
+	JWTSecret string
 }
 
 func (e *Endpoint) getUserID(context echo.Context) string {

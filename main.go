@@ -14,8 +14,10 @@ import (
 	"snippets.page-backend/validation"
 )
 
+const appConfig = "config.json"
+
 func main() {
-	config, err := config.Load("config.json")
+	config, err := config.Load(appConfig)
 	if err != nil {
 		log.Fatalln(err)
 		os.Exit(1)
@@ -29,7 +31,8 @@ func main() {
 	session.SetMode(mgo.Monotonic, true)
 	db := session.DB(config.Db.Database)
 	endpoint := endpoint.Endpoint{
-		Db: db,
+		Db:        db,
+		JWTSecret: config.JWT.Secret,
 	}
 	app := echo.New()
 	app.Debug = true
@@ -53,7 +56,7 @@ func main() {
 	public.POST("/authorization", endpoint.Authorization)
 	public.POST("/users", endpoint.CreateUser)
 	public.GET("/snippets", endpoint.GetAllPublicSnippets)
-	private := app.Group("/v1", middleware.JWT([]byte("secret")))
+	private := app.Group("/v1", middleware.JWT([]byte(endpoint.JWTSecret)))
 	private.GET("/me", endpoint.Me)
 	private.GET("/me/snippets", endpoint.GetSnippets)
 	private.GET("/me/snippets/:id", endpoint.GetSnippet)

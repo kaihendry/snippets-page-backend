@@ -6,7 +6,9 @@
         "connectionAddress": "localhost:27017",
         "database": "snippets_page"
     },
-    "jwt": {},
+    "jwt": {
+        "secret": "secret_key"
+    },
     "cors": {},
     "tls": {
         "enable": false,

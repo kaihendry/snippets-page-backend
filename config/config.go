@@ -16,7 +16,9 @@ type Config struct {
 		ConnectionAddress string `json:"connectionAddress"`
 		Database          string `json:"database"`
 	}
-	JWT  struct{}
+	JWT struct {
+		Secret string `json:"secret"`
+	}
 	CORS struct {
 	}
 	TLS struct {
