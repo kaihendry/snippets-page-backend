@@ -3,6 +3,7 @@ package endpoint
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/globalsign/mgo"
@@ -23,7 +24,10 @@ func (e *Endpoint) getUserID(context echo.Context) string {
 }
 
 func (e *Endpoint) addPaginationHeaders(context echo.Context, query filter.Filter, total int) {
-	totalPages := total / query.GetLimit()
+	totalPages := 1
+	if pages := total / query.GetLimit(); pages > 0 {
+		totalPages = pages
+	}
 	context.Response().Header().Add("X-Pagination-Total-Count", strconv.Itoa(total))
 	context.Response().Header().Add("X-Pagination-Page-Count", strconv.Itoa(totalPages))
 	context.Response().Header().Add("X-Pagination-Current-Page", strconv.Itoa(query.GetPage()))
@@ -33,7 +37,11 @@ func (e *Endpoint) addPaginationHeaders(context echo.Context, query filter.Filte
 	if query.GetPage() == lastPage {
 		nextPage = lastPage
 	}
-	link := fmt.Sprintf("<http://localhost/users?page=%d>; rel=self, <http://localhost/users?page=%d>; rel=next, <http://localhost/users?page=%d>; rel=last", query.GetPage(), nextPage, lastPage)
-	context.Response().Header().Add("Link", link)
-
+	host := context.Request().Host
+	scheme := context.Scheme()
+	path := context.Request().URL.Path
+	self := fmt.Sprintf("<%s://%s%s?page=%d>; rel=self", scheme, host, path, query.GetPage())
+	next := fmt.Sprintf("<%s://%s%s?page=%d>; rel=next", scheme, host, path, nextPage)
+	last := fmt.Sprintf("<%s://%s%s?page=%d>; rel=last", scheme, host, path, lastPage)
+	context.Response().Header().Add("Link", strings.Join([]string{self, next, last}, ","))
 }

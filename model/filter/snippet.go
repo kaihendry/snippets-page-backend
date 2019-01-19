@@ -1,7 +1,6 @@
 package filter
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -32,7 +31,6 @@ func (s *Snippet) GetSort() map[string]int {
 	} else {
 		sort["created_at"] = +1
 	}
-	fmt.Println(sort)
 	return sort
 }
 
